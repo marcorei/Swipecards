@@ -7,6 +7,7 @@ import android.database.DataSetObserver;
 import android.graphics.PointF;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Adapter;
@@ -89,9 +90,11 @@ public class SwipeFlingAdapterView extends BaseFlingAdapterView {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        Log.d("SwipeFlingAdapterView", "onLayout()");
         super.onLayout(changed, left, top, right, bottom);
         // if we don't have an adapter, we don't need to do anything
         if (mAdapter == null) {
+            Log.d("SwipeFlingAdapterView", "mAdapter is null");
             return;
         }
 
@@ -99,19 +102,31 @@ public class SwipeFlingAdapterView extends BaseFlingAdapterView {
         final int adapterCount = mAdapter.getCount();
 
         if(adapterCount == 0) {
+            Log.d("SwipeFlingAdapterView", "adapter count is 0, removing everything");
             removeAllViewsInLayout();
         }else {
             View topCard = getChildAt(LAST_OBJECT_IN_STACK);
             if(mActiveCard!=null && topCard!=null && topCard==mActiveCard) {
                 if (this.flingCardListener.isTouching()) {
+                    Log.d("SwipeFlingAdapterView", "isTouching is true");
                     PointF lastPoint = this.flingCardListener.getLastPoint();
                     if (this.mLastTouchPoint == null || !this.mLastTouchPoint.equals(lastPoint)) {
+                        Log.d("SwipeFlingAdapterView", "so there actually was a swipe");
                         this.mLastTouchPoint = lastPoint;
                         removeViewsInLayout(0, LAST_OBJECT_IN_STACK);
                         layoutChildren(1, adapterCount);
                     }
+                    else {
+                        Log.d("SwipeFlingAdapterView", "refreshing cause mLastTouchPoint check failed");
+                        refresh();
+                    }
+                }
+                else {
+                    Log.d("SwipeFlingAdapterView", "refreshing cause isTouching is false");
+                    refresh();
                 }
             }else{
+                Log.d("SwipeFlingAdapterView", "refreshing cause no active card selected");
                 // Reset the UI and set top view listener
                 refresh();
             }
@@ -122,7 +137,7 @@ public class SwipeFlingAdapterView extends BaseFlingAdapterView {
         if(adapterCount <= MIN_ADAPTER_STACK) mFlingListener.onAdapterAboutToEmpty(adapterCount);
     }
 
-    public void refresh() {
+    private void refresh() {
         removeAllViewsInLayout();
         layoutChildren(0, mAdapter.getCount());
         setTopView();
